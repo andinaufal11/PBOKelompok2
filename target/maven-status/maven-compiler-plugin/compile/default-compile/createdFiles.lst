@@ -1,0 +1,10 @@
+dao\PropertiDAO.class
+model\Pengguna.class
+model\PemilikKos.class
+controller\LoginServlet.class
+dao\PenggunaDAO.class
+controller\PropertiServlet.class
+db_connect\DBConnection.class
+model\PropertiKos.class
+controller\RegisterServlet.class
+model\Penyewa.class
