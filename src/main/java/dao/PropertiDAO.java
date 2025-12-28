@@ -1,53 +1,142 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package dao;
 
+import db_connect.DBConnection;
 import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
-
-import db_connect.DBConnection;
 import model.PropertiKos;
 
 public class PropertiDAO {
 
-    // FITUR 2: TAMBAH PROPERTI KOS BARU
-    public boolean tambahProperti(PropertiKos properti) {
-        Connection conn = DBConnection.getConnection();
-        String sql = "INSERT INTO properti_kos (id_pemilik, nama_kos, alamat_kos, peraturan) VALUES (?, ?, ?, ?)";
+    // Ambil daftar kos milik owner tertentu + hitung jumlah kamar otomatis
+    public List<PropertiKos> getPropertiByPemilik(int idPemilik) {
+        List<PropertiKos> list = new ArrayList<>();
         
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, properti.getIdPemilik());
-            ps.setString(2, properti.getNamaKos());
-            ps.setString(3, properti.getAlamatKos());
-            ps.setString(4, properti.getPeraturan());
+        // Pakai Subquery untuk hitung total baris di tabel kamar
+        String sql = "SELECT p.*, " +
+                     "(SELECT COUNT(*) FROM kamar k WHERE k.id_kos = p.id_kos) AS total_kamar " +
+                     "FROM properti_kos p WHERE p.id_pemilik = ?";
+
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             
-            int row = ps.executeUpdate();
-            return row > 0;
+            ps.setInt(1, idPemilik);
             
+            try (ResultSet rs = ps.executeQuery()) {
+                while (rs.next()) {
+                    PropertiKos p = new PropertiKos();
+                    p.setIdKos(rs.getInt("id_kos"));
+                    p.setIdPemilik(rs.getInt("id_pemilik"));
+                    p.setNamaKos(rs.getString("nama_kos"));
+                    p.setAlamatKos(rs.getString("alamat_kos"));
+                    p.setPeraturan(rs.getString("peraturan"));
+                    p.setFotoKos(rs.getString("foto_kos"));
+                    p.setJumlahKamar(rs.getInt("total_kamar")); // Set hasil subquery
+                    
+                    list.add(p);
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return list;
+    }    
+    
+    // Ambil detail 1 kos berdasarkan ID Kos
+    public PropertiKos getPropertiById(int idKos) {
+        PropertiKos p = null;
+        String sql = "SELECT p.*, (SELECT COUNT(*) FROM kamar k WHERE k.id_kos = p.id_kos) AS total_kamar " +
+                     "FROM properti_kos p WHERE p.id_kos = ?";
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, idKos);
+            ResultSet rs = ps.executeQuery();
+            if (rs.next()) {
+                p = new PropertiKos();
+                p.setIdKos(rs.getInt("id_kos"));
+                p.setIdPemilik(rs.getInt("id_pemilik"));
+                p.setNamaKos(rs.getString("nama_kos"));
+                p.setAlamatKos(rs.getString("alamat_kos"));
+                p.setPeraturan(rs.getString("peraturan"));
+                p.setFotoKos(rs.getString("foto_kos"));
+                p.setJumlahKamar(rs.getInt("total_kamar"));
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return p;
+    }
+    
+    // Simpan data kos baru ke database
+    public boolean tambahProperti(PropertiKos p) {
+        String sql = "INSERT INTO properti_kos (id_pemilik, nama_kos, alamat_kos, peraturan, foto_kos) VALUES (?, ?, ?, ?, ?)";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, p.getIdPemilik());
+            ps.setString(2, p.getNamaKos());
+            ps.setString(3, p.getAlamatKos());
+            ps.setString(4, p.getPeraturan());
+            ps.setString(5, p.getFotoKos());
+            return ps.executeUpdate() > 0;
         } catch (SQLException e) {
             e.printStackTrace();
             return false;
         }
     }
 
-    // FITUR 2: LIHAT DAFTAR KOS MILIK SENDIRI (AGREGASI)
-    public List<PropertiKos> getPropertiByPemilik(int idPemilik) {
+    // Update data kos yang sudah ada
+    public boolean updateProperti(PropertiKos p) {
+        String sql = "UPDATE properti_kos SET nama_kos=?, alamat_kos=?, peraturan=?, foto_kos=? WHERE id_kos=?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setString(1, p.getNamaKos());
+            ps.setString(2, p.getAlamatKos());
+            ps.setString(3, p.getPeraturan());
+            ps.setString(4, p.getFotoKos());
+            ps.setInt(5, p.getIdKos());
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+
+    // Hapus data kos dari tabel
+    public boolean hapusProperti(int id) {
+        String sql = "DELETE FROM properti_kos WHERE id_kos=?";
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
+            ps.setInt(1, id);
+            return ps.executeUpdate() > 0;
+        } catch (SQLException e) {
+            e.printStackTrace();
+            return false;
+        }
+    }
+    
+    // Ambil semua kos untuk pencarian (fitur filter di halaman utama)
+    public List<PropertiKos> getAllProperti(String keyword) {
         List<PropertiKos> list = new ArrayList<>();
-        Connection conn = DBConnection.getConnection();
-        String sql = "SELECT * FROM properti_kos WHERE id_pemilik = ?";
+        String sql = "SELECT * FROM properti_kos";
         
-        try {
-            PreparedStatement ps = conn.prepareStatement(sql);
-            ps.setInt(1, idPemilik);
-            ResultSet rs = ps.executeQuery();
+        // Tambahkan filter jika user mengetik sesuatu di kolom search
+        if (keyword != null && !keyword.isEmpty()) {
+            sql += " WHERE nama_kos LIKE ? OR alamat_kos LIKE ?";
+        }
+        
+        try (Connection conn = DBConnection.getConnection();
+             PreparedStatement ps = conn.prepareStatement(sql)) {
             
+            if (keyword != null && !keyword.isEmpty()) {
+                ps.setString(1, "%" + keyword + "%");
+                ps.setString(2, "%" + keyword + "%");
+            }
+            
+            ResultSet rs = ps.executeQuery();
             while (rs.next()) {
                 PropertiKos p = new PropertiKos();
                 p.setIdKos(rs.getInt("id_kos"));
@@ -55,7 +144,7 @@ public class PropertiDAO {
                 p.setNamaKos(rs.getString("nama_kos"));
                 p.setAlamatKos(rs.getString("alamat_kos"));
                 p.setPeraturan(rs.getString("peraturan"));
-                
+                p.setFotoKos(rs.getString("foto_kos"));
                 list.add(p);
             }
         } catch (SQLException e) {

@@ -39,4 +39,5 @@ public class PemilikKos extends Pengguna {
 
     public String getSkPath() { return skPath; }
     public void setSkPath(String skPath) { this.skPath = skPath; }
+    
 }

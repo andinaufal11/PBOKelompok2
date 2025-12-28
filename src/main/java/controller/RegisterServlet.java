@@ -1,7 +1,3 @@
-/*
- * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
- * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
- */
 package controller;
 
 import java.io.IOException;
@@ -18,37 +14,38 @@ import model.PemilikKos;
 @WebServlet("/register")
 public class RegisterServlet extends HttpServlet {
 
+    @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         
-        // 1. Ambil data dari Form
+        // 1. Tangkap input umum dari form (Nama, Email, Password, Role)
         String nama = request.getParameter("nama");
         String email = request.getParameter("email");
         String password = request.getParameter("password");
         String role = request.getParameter("role"); 
         
+        // Inisialisasi status awal (Wajib False agar aman jika proses gagal)
         PenggunaDAO dao = new PenggunaDAO();
         boolean success = false;
 
-        System.out.println("Mencoba Register: " + email + " sebagai " + role); // Debugging
-
+        // 2. Logika Pemisahan Data Berdasarkan Role
         if ("PENYEWA".equalsIgnoreCase(role)) {
+            // Proses khusus Penyewa: Ambil data tambahan & panggil DAO Penyewa
             String alamat = request.getParameter("alamat");
             String noHp = request.getParameter("noHp");
             
             Penyewa penyewa = new Penyewa();
-            // PERBAIKAN DI SINI: Set kedua nama (Panggilan & Lengkap)
             penyewa.setNamaPanggilan(nama); 
-            penyewa.setNamaLengkap(nama); // <--- INI YANG TADI KURANG!
-            
             penyewa.setEmail(email);
             penyewa.setPassword(password);
             penyewa.setAlamatAsal(alamat);
             penyewa.setNoHp(noHp);
             
+            // Status berubah jadi TRUE jika database berhasil menyimpan
             success = dao.registerPenyewa(penyewa);
             
         } else if ("PEMILIK".equalsIgnoreCase(role)) {
+            // Proses khusus Pemilik: Ambil data No HP & panggil DAO Pemilik
             String noHp = request.getParameter("noHp");
             
             PemilikKos pemilik = new PemilikKos();
@@ -57,14 +54,16 @@ public class RegisterServlet extends HttpServlet {
             pemilik.setPassword(password);
             pemilik.setNoHp(noHp);
             
+            // Status berubah jadi TRUE jika database berhasil menyimpan
             success = dao.registerPemilik(pemilik);
         }
 
+        // 3. Penentuan Halaman Tujuan (Redirect) berdasarkan variabel success
         if (success) {
-            System.out.println("Register SUKSES redirect ke login");
+            // Jika TRUE: Pindah ke Login dengan status sukses
             response.sendRedirect("login.jsp?status=success");
         } else {
-            System.out.println("Register GAGAL redirect ke register");
+            // Jika FALSE: Tetap di Register dengan status gagal
             response.sendRedirect("register.jsp?status=failed");
         }
     }

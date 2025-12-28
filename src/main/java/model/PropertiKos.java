@@ -6,23 +6,17 @@ package model;
 
 public class PropertiKos {
     private int idKos;
-    private int idPemilik; // Foreign Key reference
+    private int idPemilik;
     private String namaKos;
     private String alamatKos;
     private String peraturan;
+    private String fotoKos;
+    
+    // TAMBAHAN: Variabel untuk menampung jumlah kamar
+    private int jumlahKamar;
 
-    public PropertiKos() {}
-
-    // Constructor dengan parameter (Opsional, untuk memudahkan nanti)
-    public PropertiKos(int idKos, int idPemilik, String namaKos, String alamatKos, String peraturan) {
-        this.idKos = idKos;
-        this.idPemilik = idPemilik;
-        this.namaKos = namaKos;
-        this.alamatKos = alamatKos;
-        this.peraturan = peraturan;
-    }
-
-    // Getter & Setter
+    // --- GETTER & SETTER ---
+    
     public int getIdKos() { return idKos; }
     public void setIdKos(int idKos) { this.idKos = idKos; }
 
@@ -37,4 +31,11 @@ public class PropertiKos {
 
     public String getPeraturan() { return peraturan; }
     public void setPeraturan(String peraturan) { this.peraturan = peraturan; }
+
+    public String getFotoKos() { return fotoKos; }
+    public void setFotoKos(String fotoKos) { this.fotoKos = fotoKos; }
+
+    // TAMBAHAN: Getter & Setter untuk jumlahKamar
+    public int getJumlahKamar() { return jumlahKamar; }
+    public void setJumlahKamar(int jumlahKamar) { this.jumlahKamar = jumlahKamar; }
 }

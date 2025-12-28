@@ -35,4 +35,6 @@ public class Penyewa extends Pengguna {
 
     public String getKtpPath() { return ktpPath; }
     public void setKtpPath(String ktpPath) { this.ktpPath = ktpPath; }
+    
+    
 }
